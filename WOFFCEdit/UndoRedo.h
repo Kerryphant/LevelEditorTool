@@ -31,7 +31,10 @@ private:
 
 	bool wasUndoLastOper;
 
-	std::stack<ObjectChange> m_undoObjectStack;
+	//std::stack<ObjectChange> m_undoObjectStack;
+	int undoStackPointer;
+	std::vector<ObjectChange> m_undoObjectStack;
+
 	std::stack<ObjectChange> m_redoObjectStack;
 
 };

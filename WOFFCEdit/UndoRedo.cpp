@@ -3,10 +3,12 @@
 UndoRedo::UndoRedo()
 {
 	wasUndoLastOper = false;
+	undoStackPointer = -2;
 }
 
 void UndoRedo::StoreChanges(std::vector<SceneObject> originalObjects, std::vector<int> objectIndexes, int operationType, bool undoStack)
 {
+
 	//if (wasUndoLastOper)
 	//{
 		int size = m_redoObjectStack.size();
@@ -14,6 +16,7 @@ void UndoRedo::StoreChanges(std::vector<SceneObject> originalObjects, std::vecto
 		{
 			m_redoObjectStack.pop();
 		}
+		//if (size) { undoStackPointer++; }
 	//}
 
 	ObjectChange newChange;
@@ -39,9 +42,18 @@ void UndoRedo::StoreChanges(std::vector<SceneObject> originalObjects, std::vecto
 		break;
 	}
 
+	undoStackPointer++;
+
 	if (undoStack)
 	{
-		m_undoObjectStack.push(newChange);
+		if (undoStackPointer + 1 >= m_undoObjectStack.size())
+		{
+			m_undoObjectStack.push_back(newChange);
+		}
+		else
+		{
+			m_undoObjectStack[undoStackPointer + 1] = newChange;
+		}
 	}
 	else
 	{
@@ -52,10 +64,9 @@ void UndoRedo::StoreChanges(std::vector<SceneObject> originalObjects, std::vecto
 
 void UndoRedo::UndoChange(std::vector<SceneObject>& m_sceneGraph_)
 {
-	if (!m_undoObjectStack.empty())
+	if (undoStackPointer > -1)
 	{
-
-		ObjectChange change = m_undoObjectStack.top();		
+		ObjectChange change = m_undoObjectStack[undoStackPointer];
 
 		switch (change.s_operation)
 		{
@@ -78,8 +89,9 @@ void UndoRedo::UndoChange(std::vector<SceneObject>& m_sceneGraph_)
 			break;
 		}
 
-		m_redoObjectStack.push(change);
-		m_undoObjectStack.pop();
+		m_redoObjectStack.push(m_undoObjectStack[undoStackPointer + 1]);
+		//m_undoObjectStack.pop();
+		undoStackPointer--;
 
 		wasUndoLastOper = true;
 	}
@@ -115,7 +127,12 @@ void UndoRedo::RedoChange(std::vector<SceneObject>& m_sceneGraph_)
 			break;
 		}
 
-		m_undoObjectStack.push(change);
+		undoStackPointer++;
+		//m_undoObjectStack.push(change);
+		m_undoObjectStack[undoStackPointer + 1] = change;
+
+		
+
 		m_redoObjectStack.pop();
 
 		wasUndoLastOper = false;
