@@ -25,6 +25,9 @@ ToolMain::ToolMain()
 
 	m_selectMultiple = false;
 	m_terrainSculpting = false;
+	m_objectCreated = false;
+	m_undoCompleted = false;
+	m_redoCompleted = false;
 
 	lastIntersection = DirectX::XMFLOAT4(0, 0, 0, 1);
 	currentIntersection = DirectX::XMFLOAT4(0, 0, 0, 1);
@@ -428,12 +431,37 @@ void ToolMain::UpdateInput(MSG * msg)
 	}
 	else m_toolInputCommands.Y = false;
 
+
+	if (m_keyArray[17] && m_keyArray['Z'])
+	{
+		m_toolInputCommands.undo = true;
+	}
+	else
+	{
+		m_toolInputCommands.undo = false;
+		m_undoCompleted = false;
+	}
+
+	if (m_keyArray[17] && m_keyArray['Y'])
+	{
+		m_toolInputCommands.redo = true;
+	}
+	else
+	{
+		m_toolInputCommands.redo = false;
+		m_redoCompleted = false;
+	}
+
 	//New object create
 	if (m_keyArray['N'])
 	{
 		m_toolInputCommands.newObject = true;
 	}
-	else m_toolInputCommands.newObject = false;
+	else
+	{
+		m_toolInputCommands.newObject = false;
+		m_objectCreated = false;
+	}
 
 }
 
@@ -522,7 +550,7 @@ void ToolMain::HandleObjectSelection()
 
 void ToolMain::HandleKeyboardShortcuts()
 {
-	if (m_toolInputCommands.ctrl && m_toolInputCommands.Z)
+	if (m_toolInputCommands.undo)
 	{
 		UndoChange();
 
@@ -530,7 +558,7 @@ void ToolMain::HandleKeyboardShortcuts()
 		m_toolInputCommands.ctrl = false;
 	}	
 	
-	if (m_toolInputCommands.ctrl && m_toolInputCommands.Y)
+	if (m_toolInputCommands.redo)
 	{
 		RedoChange();
 
@@ -625,97 +653,111 @@ void ToolMain::StoreChanges(std::vector<SceneObject> originalObjects, std::vecto
 
 void ToolMain::UndoChange()
 {
-	undoRedoHandler.UndoChange(m_sceneGraph);
+	if (!m_undoCompleted)
+	{
+		undoRedoHandler.UndoChange(m_sceneGraph);
+		m_undoCompleted = true;
+	}
+	
 }
 
 void ToolMain::RedoChange()
 {
-	undoRedoHandler.RedoChange(m_sceneGraph);
+	if (!m_redoCompleted)
+	{
+		undoRedoHandler.RedoChange(m_sceneGraph);
+		m_redoCompleted = true;
+	}
 }
 
 
 void ToolMain::CreateNewObject()
 {
-	int largestID = 0;
-	for (int i = 0; i < m_sceneGraph.size(); i++)
-	{
-		if (m_sceneGraph[i].ID > largestID)
+	if(!m_objectCreated)
+	{ 
+		int largestID = 0;
+		for (int i = 0; i < m_sceneGraph.size(); i++)
 		{
-			largestID = m_sceneGraph[i].ID;
+			if (m_sceneGraph[i].ID > largestID)
+			{
+				largestID = m_sceneGraph[i].ID;
+			}
 		}
-	}
 
-	SceneObject newSceneObject;
-	newSceneObject.ID = largestID + 1;
-	newSceneObject.chunk_ID = 0;
-	newSceneObject.model_path = "database/data/placeholder.cmo";
-	newSceneObject.tex_diffuse_path = "database/data/placeholder.dds";
-	newSceneObject.posX = 0.0f;
-	newSceneObject.posY = 0.0f;
-	newSceneObject.posZ = 0.0f;
-	newSceneObject.rotX = 0.0f;
-	newSceneObject.rotY = 0.0f;
-	newSceneObject.rotZ = 0.0f;
-	newSceneObject.scaX = 1.0f;
-	newSceneObject.scaY = 1.0f;
-	newSceneObject.scaZ = 1.0f;
-	newSceneObject.render = true;
-	newSceneObject.collision = false;
-	newSceneObject.collision_mesh = "";
-	newSceneObject.collectable = false;
-	newSceneObject.destructable = false;
-	newSceneObject.health_amount = 0;
-	newSceneObject.editor_render = true;
-	newSceneObject.editor_texture_vis = true;
-	newSceneObject.editor_normals_vis = false;
-	newSceneObject.editor_collision_vis = false;
-	newSceneObject.editor_pivot_vis = false;
-	newSceneObject.pivotX = 0.0f;
-	newSceneObject.pivotY = 0.0f;
-	newSceneObject.pivotZ = 0.0f;
-	newSceneObject.snapToGround = false;
-	newSceneObject.AINode = false;
-	newSceneObject.audio_path = "";
-	newSceneObject.volume = 0.0f;
-	newSceneObject.pitch = 0.0f;
-	newSceneObject.pan = 0.0f;
-	newSceneObject.one_shot = false;
-	newSceneObject.play_on_init = false;
-	newSceneObject.play_in_editor = false;
-	newSceneObject.min_dist = 0;
-	newSceneObject.max_dist = 0;
-	newSceneObject.camera = false;
-	newSceneObject.path_node = false;
-	newSceneObject.path_node_start = false;
-	newSceneObject.path_node_end = false;
-	newSceneObject.parent_id = -1;
-	newSceneObject.editor_wireframe = false;
-	newSceneObject.name = "new Object";
+		SceneObject newSceneObject;
+		newSceneObject.ID = largestID + 1;
+		newSceneObject.chunk_ID = 0;
+		newSceneObject.model_path = "database/data/placeholder.cmo";
+		newSceneObject.tex_diffuse_path = "database/data/placeholder.dds";
+		newSceneObject.posX = 0.0f;
+		newSceneObject.posY = 0.0f;
+		newSceneObject.posZ = 0.0f;
+		newSceneObject.rotX = 0.0f;
+		newSceneObject.rotY = 0.0f;
+		newSceneObject.rotZ = 0.0f;
+		newSceneObject.scaX = 1.0f;
+		newSceneObject.scaY = 1.0f;
+		newSceneObject.scaZ = 1.0f;
+		newSceneObject.render = true;
+		newSceneObject.collision = false;
+		newSceneObject.collision_mesh = "";
+		newSceneObject.collectable = false;
+		newSceneObject.destructable = false;
+		newSceneObject.health_amount = 0;
+		newSceneObject.editor_render = true;
+		newSceneObject.editor_texture_vis = true;
+		newSceneObject.editor_normals_vis = false;
+		newSceneObject.editor_collision_vis = false;
+		newSceneObject.editor_pivot_vis = false;
+		newSceneObject.pivotX = 0.0f;
+		newSceneObject.pivotY = 0.0f;
+		newSceneObject.pivotZ = 0.0f;
+		newSceneObject.snapToGround = false;
+		newSceneObject.AINode = false;
+		newSceneObject.audio_path = "";
+		newSceneObject.volume = 0.0f;
+		newSceneObject.pitch = 0.0f;
+		newSceneObject.pan = 0.0f;
+		newSceneObject.one_shot = false;
+		newSceneObject.play_on_init = false;
+		newSceneObject.play_in_editor = false;
+		newSceneObject.min_dist = 0;
+		newSceneObject.max_dist = 0;
+		newSceneObject.camera = false;
+		newSceneObject.path_node = false;
+		newSceneObject.path_node_start = false;
+		newSceneObject.path_node_end = false;
+		newSceneObject.parent_id = -1;
+		newSceneObject.editor_wireframe = false;
+		newSceneObject.name = "new Object";
 
-	newSceneObject.light_type = 0;
-	newSceneObject.light_diffuse_r = 1;
-	newSceneObject.light_diffuse_g = 1;
-	newSceneObject.light_diffuse_b = 1;
-	newSceneObject.light_specular_r = 1;
-	newSceneObject.light_specular_g = 1;
-	newSceneObject.light_specular_b = 1;
-	newSceneObject.light_spot_cutoff = 1;
-	newSceneObject.light_constant = 1;
-	newSceneObject.light_linear = 1;
-	newSceneObject.light_quadratic = 1;
+		newSceneObject.light_type = 0;
+		newSceneObject.light_diffuse_r = 1;
+		newSceneObject.light_diffuse_g = 1;
+		newSceneObject.light_diffuse_b = 1;
+		newSceneObject.light_specular_r = 1;
+		newSceneObject.light_specular_g = 1;
+		newSceneObject.light_specular_b = 1;
+		newSceneObject.light_spot_cutoff = 1;
+		newSceneObject.light_constant = 1;
+		newSceneObject.light_linear = 1;
+		newSceneObject.light_quadratic = 1;
 
 
-	//send completed object to scenegraph
-	m_sceneGraph.push_back(newSceneObject);
-	m_sgFirstMoveFlags.push_back(false); 
+		//send completed object to scenegraph
+		m_sceneGraph.push_back(newSceneObject);
+		m_sgFirstMoveFlags.push_back(false);
 
-	std::vector<SceneObject> tempNewObject;
-	tempNewObject.push_back(newSceneObject);
+		std::vector<SceneObject> tempNewObject;
+		tempNewObject.push_back(newSceneObject);
 
-	std::vector<int> tempIndex;
-	tempIndex.push_back(m_sceneGraph.size() - 1);
+		std::vector<int> tempIndex;
+		tempIndex.push_back(m_sceneGraph.size() - 1);
 
-	StoreChanges(tempNewObject, tempIndex, 1);
+		StoreChanges(tempNewObject, tempIndex, 1);
+
+		m_objectCreated = true;
+	}	
 }
 
 void ToolMain::DuplicateObject(SceneObject objectToCopy)

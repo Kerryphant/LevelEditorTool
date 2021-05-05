@@ -93,7 +93,11 @@ private:	//variables
 	
 	bool m_terrainSculpting;
 
+	bool m_objectCreated;
 	bool m_dragging;
+	bool m_undoCompleted;
+	bool m_redoCompleted;
+
 	DirectX::XMFLOAT4 lastIntersection;
 	DirectX::XMFLOAT4 currentIntersection;
 

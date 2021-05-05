@@ -21,6 +21,9 @@ struct InputCommands
 	bool shift;
 	bool ctrl;
 
+	bool undo;
+	bool redo;
+
 	bool C;
 	bool Z;
 	bool Y;
