@@ -128,16 +128,19 @@ void ObjectInspector::OnBnClickedApply()
 
 	SceneObject temp;
 	bool firstMove = false;
+	bool changeMade = false;
+	
 	if (m_ToolMain->m_sgFirstMoveFlags.at(*m_currentSelection))
 	{
 		firstMove = true;
 		temp = m_sceneGraph->at(*m_currentSelection);	
 	}	
 
+
 	for (int i = 0; i < 9; i++)
 	{
 		CString stringVal;
-		
+
 		//get values from arrays
 		newTransform[i].GetWindowTextW(stringVal);
 
@@ -150,30 +153,39 @@ void ObjectInspector::OnBnClickedApply()
 			{
 			case 0://position
 				m_sceneGraph->at(*m_currentSelection).posX = floatVal;
+				changeMade = true;
 				break;
 			case 1:
 				m_sceneGraph->at(*m_currentSelection).posY = floatVal;
+				changeMade = true;
 				break;
 			case 2:
 				m_sceneGraph->at(*m_currentSelection).posZ = floatVal;
+				changeMade = true;
 				break;
 			case 3://rotation
 				m_sceneGraph->at(*m_currentSelection).rotX = floatVal;
+				changeMade = true;
 				break;
 			case 4:
 				m_sceneGraph->at(*m_currentSelection).rotY = floatVal;
+				changeMade = true;
 				break;
 			case 5:
 				m_sceneGraph->at(*m_currentSelection).rotZ = floatVal;
+				changeMade = true;
 				break;
 			case 6://scale
 				m_sceneGraph->at(*m_currentSelection).scaX = floatVal;
+				changeMade = true;
 				break;
 			case 7:
 				m_sceneGraph->at(*m_currentSelection).scaY = floatVal;
+				changeMade = true;
 				break;
 			case 8:
 				m_sceneGraph->at(*m_currentSelection).scaZ = floatVal;
+				changeMade = true;
 				break;
 			default:
 				break;
@@ -183,14 +195,30 @@ void ObjectInspector::OnBnClickedApply()
 
 	}
 
-	if (firstMove)
+	if (changeMade)
 	{
-		m_ToolMain->StoreChanges(temp, *m_currentSelection, 2);
-		m_ToolMain->m_sgFirstMoveFlags.at(*m_currentSelection) = false;
+		if (firstMove)
+		{
+			std::vector<SceneObject> tempObject;
+			tempObject.push_back(temp);
 
+			std::vector<int> tempIndex;
+			tempIndex.push_back(*m_currentSelection);
+
+			m_ToolMain->StoreChanges(tempObject, tempIndex, 2);
+			m_ToolMain->m_sgFirstMoveFlags.at(*m_currentSelection) = false;
+
+		}
+
+		std::vector<SceneObject> tempObject;
+		tempObject.push_back(m_sceneGraph->at(*m_currentSelection));
+
+		std::vector<int> tempIndex;
+		tempIndex.push_back(*m_currentSelection);
+
+		m_ToolMain->StoreChanges(tempObject, tempIndex, 2);
+
+		m_ToolMain->UpdateSceneObjects();
 	}
-
-	m_ToolMain->StoreChanges(m_sceneGraph->at(*m_currentSelection), *m_currentSelection, 2);
-
-	m_ToolMain->UpdateSceneObjects();
+	
 }

@@ -7,21 +7,7 @@
 #include "SceneObject.h"
 #include "InputCommands.h"
 #include <vector>
-#include <stack>
-
-struct ObjectChange
-{
-	enum OperationType
-	{
-		deletion = 0,
-		creation = 1,
-		change = 2
-	};
-
-	OperationType s_operation;
-	int s_indexSceneGraph;
-	SceneObject s_originalObject;
-};
+#include "UndoRedo.h"
 
 class ToolMain
 {
@@ -62,7 +48,7 @@ public: //methods
 
 	void	HandleMouseDrag();
 
-	void	StoreChanges(SceneObject originalObject, int objectIndex, int operationType, bool undoStack = true);
+	void	StoreChanges(std::vector<SceneObject> originalObjects, std::vector<int> objectIndex, int operationType, bool undoStack = true);
 	void	UndoChange();
 	void	RedoChange();
 
@@ -107,10 +93,9 @@ private:	//variables
 	
 	bool m_terrainSculpting;
 
-	std::stack<ObjectChange> m_undoObjectStack;
-	std::stack<ObjectChange> m_redoObjectStack;
-
 	bool m_dragging;
 	DirectX::XMFLOAT4 lastIntersection;
 	DirectX::XMFLOAT4 currentIntersection;
+
+	UndoRedo undoRedoHandler;
 };

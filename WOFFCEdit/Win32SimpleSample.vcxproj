@@ -182,6 +182,7 @@
     <ClCompile Include="sqlite3.c" />
     <ClCompile Include="TerrainEditor.cpp" />
     <ClCompile Include="ToolMain.cpp" />
+    <ClCompile Include="UndoRedo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -204,6 +205,7 @@
     <ClInclude Include="MFCMain.h" />
     <ClInclude Include="TerrainEditor.h" />
     <ClInclude Include="ToolMain.h" />
+    <ClInclude Include="UndoRedo.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="database\data\Scene1.fbx">

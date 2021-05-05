@@ -440,7 +440,6 @@ void ToolMain::UpdateInput(MSG * msg)
 void ToolMain::UpdateSceneObjects()
 {
 	m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
-	//m_d3dRenderer.BuildDisplayChunk(&m_chunk);
 }
 
 void ToolMain::HandleObjectSelection()
@@ -486,7 +485,6 @@ void ToolMain::HandleObjectSelection()
 			}
 
 			processedLClick = true;
-			//m_toolInputCommands.mouse_LB_Down = false;
 			m_selectMultiple = true;
 		}
 		if (!m_toolInputCommands.shift && m_selectMultiple)
@@ -504,17 +502,11 @@ void ToolMain::HandleObjectSelection()
 			{
 				m_selectedObjects.push_back(m_d3dRenderer.MousePicking());
 			}
-
-			//m_toolInputCommands.mouse_LB_Down = false;
 		}
 
 		if (m_selectedObjects.size() == 1)
 		{
 			m_selectedObject = m_selectedObjects[0];
-		}
-		else
-		{
-			//m_selectedObject = -1;
 		}
 	}
 	else
@@ -561,6 +553,13 @@ void ToolMain::HandleMouseDrag()
 			if (m_d3dRenderer.MousePicking() == m_selectedObjects[i])
 			{
 				m_dragging = true;
+
+				std::vector<SceneObject> selectedObjects;
+				for (int i = 0; i < m_selectedObjects.size(); i++)
+				{
+					selectedObjects.push_back(m_sceneGraph[m_selectedObjects[i]]);
+				}
+				undoRedoHandler.StoreChanges(selectedObjects, m_selectedObjects, 2);
 				break;
 			}
 		}
@@ -575,6 +574,13 @@ void ToolMain::HandleMouseDrag()
 	if ((m_dragging && !m_toolInputCommands.mouse_LB_Down) || (m_dragging && !m_toolInputCommands.ctrl))
 	{
 		m_dragging = false;
+
+		std::vector<SceneObject> selectedObjects;
+		for (int i = 0; i < m_selectedObjects.size(); i++)
+		{
+			selectedObjects.push_back(m_sceneGraph[m_selectedObjects[i]]);
+		}
+		undoRedoHandler.StoreChanges(selectedObjects, m_selectedObjects, 2);
 
 		lastIntersection.x = 0;
 		lastIntersection.z = 0;
@@ -612,96 +618,21 @@ void ToolMain::HandleMouseDrag()
 	
 }
 
-void ToolMain::StoreChanges(SceneObject originalObject, int objectIndex, int operationType, bool undoStack)
+void ToolMain::StoreChanges(std::vector<SceneObject> originalObjects, std::vector<int> objectIndex, int operationType, bool undoStack)
 {
-	ObjectChange newChange;
-	newChange.s_originalObject = originalObject;
-	newChange.s_indexSceneGraph = objectIndex;
-	
-	switch (operationType)
-	{
-	case 0:
-		newChange.s_operation = ObjectChange::OperationType::deletion;
-		break;
-	case 1:
-		newChange.s_operation = ObjectChange::OperationType::creation;
-		break;
-	case 2:
-		newChange.s_operation = ObjectChange::OperationType::change;
-		break;
-	default:
-		break;
-	}
-
-	if (undoStack)
-	{
-		m_undoObjectStack.push(newChange);
-	}
-	else
-	{
-		m_redoObjectStack.push(newChange);
-	}
-	
+	undoRedoHandler.StoreChanges(originalObjects, objectIndex, operationType, undoStack);
 }
 
 void ToolMain::UndoChange()
 {
-	if (!m_undoObjectStack.empty())
-	{
-		ObjectChange change = m_undoObjectStack.top();
-
-		switch (change.s_operation)
-		{
-		case ObjectChange::OperationType::deletion:
-
-			break;
-		case ObjectChange::OperationType::creation:
-			m_sceneGraph.pop_back();
-			break;
-		case ObjectChange::OperationType::change:
-			//revert the object to its original state
-			m_sceneGraph[change.s_indexSceneGraph] = change.s_originalObject;
-
-			
-			break;
-		default:
-			break;
-		}
-
-		m_redoObjectStack.push(change);
-		m_undoObjectStack.pop();
-
-	}
-	
+	undoRedoHandler.UndoChange(m_sceneGraph);
 }
 
 void ToolMain::RedoChange()
 {
-	if (!m_redoObjectStack.empty())
-	{
-		ObjectChange change = m_redoObjectStack.top();
-
-		switch (change.s_operation)
-		{
-		case ObjectChange::OperationType::deletion:
-
-			break;
-		case ObjectChange::OperationType::creation:
-			m_sceneGraph.push_back(change.s_originalObject);
-			break;
-		case ObjectChange::OperationType::change:
-			//revert the object to its original state
-			m_sceneGraph[change.s_indexSceneGraph] = change.s_originalObject;
-			break;
-		default:
-			break;
-		}
-
-		m_undoObjectStack.push(change);
-		m_redoObjectStack.pop();
-
-	}
+	undoRedoHandler.RedoChange(m_sceneGraph);
 }
+
 
 void ToolMain::CreateNewObject()
 {
@@ -778,7 +709,13 @@ void ToolMain::CreateNewObject()
 	m_sceneGraph.push_back(newSceneObject);
 	m_sgFirstMoveFlags.push_back(false); 
 
-	StoreChanges(newSceneObject, m_sceneGraph.size() - 1, 1);
+	std::vector<SceneObject> tempNewObject;
+	tempNewObject.push_back(newSceneObject);
+
+	std::vector<int> tempIndex;
+	tempIndex.push_back(m_sceneGraph.size() - 1);
+
+	StoreChanges(tempNewObject, tempIndex, 1);
 }
 
 void ToolMain::DuplicateObject(SceneObject objectToCopy)

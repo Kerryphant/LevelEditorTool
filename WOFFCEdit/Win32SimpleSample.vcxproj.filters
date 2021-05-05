@@ -68,6 +68,9 @@
     <ClCompile Include="TerrainEditor.cpp">
       <Filter>MFC</Filter>
     </ClCompile>
+    <ClCompile Include="UndoRedo.cpp">
+      <Filter>SQLITE\Tool</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DeviceResources.h">
@@ -125,6 +128,9 @@
     </ClInclude>
     <ClInclude Include="TerrainEditor.h">
       <Filter>MFC</Filter>
+    </ClInclude>
+    <ClInclude Include="UndoRedo.h">
+      <Filter>SQLITE\Tool</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
